@@ -552,6 +552,19 @@ def load_volume(file_path):
         reslice.Update()
 
         return reslice.GetOutput()
+    elif file_path.endswith(".mha"):
+        reader = vtkMetaImageReader()
+        reader.SetFileName(file_path)
+        reader.Update()
+
+        reslice = vtkImageReslice()
+        reslice.SetInputConnection(reader.GetOutputPort())
+        reslice.SetInterpolationModeToLinear()
+        reslice.AutoCropOutputOn()
+        reslice.TransformInputSamplingOff()
+        reslice.Update()
+
+        return reader.GetOutput()
 
     if file_path.endswith(".nrrd"):
         reader = vtkNrrdReader()
