@@ -20,6 +20,7 @@ from vtk import (
     vtkImageReslice,
     vtkImageResliceMapper,
     vtkImageSlice,
+    vtkLookupTable,
     vtkMath,
     vtkMatrix4x4,
     vtkNIFTIImageReader,
@@ -402,11 +403,36 @@ def render_volume_in_3D(image_data, renderer):
 
 def render_mesh_in_3D(poly_data, renderer):
     mapper = vtkPolyDataMapper()
+
+    try:
+        labels_array = poly_data.GetPointData().GetArray("labels")
+        poly_data.GetPointData().SetActiveScalars("labels")  # Set active scalars for points
+        mapper.SetScalarRange(0, 5)
+
+        lut = vtkLookupTable()
+        lut.SetNumberOfTableValues(6)
+        lut.Build()
+
+        lut.SetTableValue(0, 1.0, 1.0, 1.0)  # White
+        lut.SetTableValue(1, 0.0, 1.0, 0.0)  # Green
+        lut.SetTableValue(2, 0.0, 0.0, 1.0)  # Blue
+        lut.SetTableValue(3, 0.0, 1.0, 1.0)  # Cyan
+        lut.SetTableValue(4, 1.0, 0.0, 1.0)  # Magenta
+        lut.SetTableValue(5, 1.0, 0.0, 0.0)  # Red
+
+        mapper.SetLookupTable(lut)
+
+    except Exception as e: 
+        print(e)
+        pass
+
     mapper.SetInputData(poly_data)
+    mapper.SetScalarModeToUsePointData()
+    mapper.ScalarVisibilityOn()
 
     actor = vtkActor()
     actor.SetMapper(mapper)
-    actor.GetProperty().SetColor(1, 0, 0)
+    #actor.GetProperty().SetColor(1, 0, 0)
 
     renderer.AddActor(actor)
     renderer.ResetCameraScreenSpace(0.8)
